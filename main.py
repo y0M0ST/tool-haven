@@ -1,14 +1,14 @@
 import cv2
+import os
+import sys
 import mss
 import numpy as np
-import pydirectinput # 🪄 VŨ KHÍ MỚI: Giả lập phím bấm vật lý siêu cấp
-import keyboard # Vẫn giữ lại để làm Hotkey F6 cho mượt
+import pydirectinput
+import keyboard
 import time
 import threading
-import tkinter as tk
-from tkinter import ttk
+import customtkinter as ctk # 🪄 Dàn áo Premium xịn xò
 
-# Tắt tính năng tự động delay của pydirectinput (để Bot vẩy phím nhanh như chớp)
 pydirectinput.PAUSE = 0.0
 
 # ==========================================
@@ -33,13 +33,25 @@ FIGHT_LOOP_SLEEP = 0.02
 SCAN_IDLE_SLEEP = 0.05
 
 bot_running = False
-bot_paused = False  
+bot_paused = False
 rod_slot = "1"
 
-# Hàm dọn dẹp phím ảo đề phòng kẹt
+# ==========================================
+# 🧠 LOGIC XỬ LÝ (Giữ nguyên 100% của đại gia)
+# ==========================================
+
+def resource_path(relative_path):
+    """ Lấy đường dẫn tuyệt đối tới file, xài được cho cả lúc code và lúc build ra .exe """
+    try:
+        # PyInstaller tạo ra một thư mục tạm trong sys._MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 def clear_keys():
-    pydirectinput.keyUp('q')
-    pydirectinput.keyUp('e')
+    pydirectinput.keyUp("q")
+    pydirectinput.keyUp("e")
 
 def press_rod_slot():
     clear_keys()
@@ -73,6 +85,7 @@ def scan_fish_bar(sct):
 
     return get_center_x(fish_mask), get_center_x(bar_mask)
 
+
 def control_fish(diff, current_pressed):
     if diff > FIGHT_DEADZONE:
         if current_pressed != "e":
@@ -94,11 +107,10 @@ def finish_fight_and_recast():
     lbl_status.config(text="Câu xong! Chờ game cất cá...", fg="orange")
     return wait_seconds(
         RECOVERY_DELAY_SEC,
-        lambda remaining: f"Câu xong! Chờ cất cá... còn {remaining}s",
+        lambda remaining: f"Câu xong! Chờ câu tiếp cá... còn {remaining}s",
     )
 
 def fight_minigame(sct):
-    """Mắt thần: Q/E khi thấy cá + thanh. Trả True khi UI biến mất -> cần quăng lại."""
     ui_seen = False
     missing_frames = 0
     ui_return_streak = 0
@@ -158,10 +170,6 @@ def get_center_x(mask):
                 return int(M["m10"] / M["m00"])
     return None
 
-# ==========================================
-# 🧠 LUỒNG CHẠY NGẦM (State machine)
-# CAST -> WAIT 15s -> FIGHT -> RECAST (lặp)
-# ==========================================
 def auto_fishing_loop():
     global bot_running, bot_paused, rod_slot
 
@@ -178,35 +186,65 @@ def auto_fishing_loop():
 
             if not wait_seconds(
                 WAIT_AFTER_CAST_SEC,
-                lambda remaining: f"Chờ nhân vật câu cá... còn {remaining}s",
+                lambda remaining: f"Đang chờ cá cắn câu, còn {remaining}s",
             ):
                 break
 
-            lbl_status.config(text="Mắt thần ON! Canh cá + thanh mục tiêu...", fg="green")
+            lbl_status.config(text="ĐANG BẮT ĐẦU CÂU CÁ...", fg="green")
 
             if not fight_minigame(sct):
                 break
 
             lbl_status.config(text=f"Sắp quăng lại ô {rod_slot}...", fg="blue")
 
+
 # ==========================================
-# 🖥️ GIAO DIỆN APP TKINTER 
+# 🖥️ GIAO DIỆN PREMIUM MODERN (CUSTOMTKINTER)
 # ==========================================
+ctk.set_appearance_mode("dark")  
+ctk.set_default_color_theme("blue") 
+
+class StatusLabelAdapter:
+    """Thread-safe xịn xò đã được độ lại để tương thích CustomTkinter"""
+    def __init__(self, widget):
+        self._widget = widget
+
+    def config(self, **kwargs):
+        # Bộ lọc màu tự động dịch màu cơ bản sang mã Hex sang trọng
+        color_map = {
+            "red": "#ED4245",     # Đỏ Discord
+            "blue": "#00B4D8",    # Xanh Ngọc
+            "green": "#3BA55C",   # Xanh Lá Discord
+            "orange": "#FEE75C",  # Vàng Neon nhẹ
+            "black": "#A1A1AA"    # Xám khói
+        }
+        
+        # Chuyển đổi 'fg' của tk thuần thành 'text_color' của ctk
+        if 'fg' in kwargs:
+            kwargs['text_color'] = color_map.get(kwargs.pop('fg'), "#E4E4E7")
+            
+        def _apply():
+            self._widget.configure(**kwargs)
+
+        self._widget.after(0, _apply)
+
+
 def start_bot():
     global bot_running, bot_paused, rod_slot
     if not bot_running:
         bot_running = True
         bot_paused = False
         rod_slot = combo_slot.get()
-        
-        btn_start.config(state=tk.DISABLED)
-        btn_pause.config(state=tk.NORMAL, text="TẠM DỪNG (F6)", bg="#fca311")
-        btn_stop.config(state=tk.NORMAL)
-        combo_slot.config(state=tk.DISABLED)
-        
+
+        btn_start.configure(state="disabled", fg_color="#383A40")
+        btn_pause.configure(state="normal", text="TẠM DỪNG (F6)", fg_color="#4F545C", hover_color="#686D73", text_color="#FFFFFF")
+        btn_stop.configure(state="normal")
+        combo_slot.configure(state="disabled")
+
         t = threading.Thread(target=auto_fishing_loop)
         t.daemon = True
         t.start()
+
 
 def toggle_pause():
     global bot_paused, bot_running
@@ -214,50 +252,72 @@ def toggle_pause():
         bot_paused = not bot_paused
         if bot_paused:
             clear_keys()
-            btn_pause.config(text="TIẾP TỤC (F6)", bg="#a4de02")
-            lbl_status.config(text="Đã TẠM DỪNG", fg="#d35400")
+            btn_pause.configure(text="TIẾP TỤC (F6)", fg_color="#FEE75C", hover_color="#D4C14A", text_color="#18181B")
+            lbl_status.config(text="Đã TẠM DỪNG. Lượn phố thôi!", fg="orange")
         else:
-            btn_pause.config(text="TẠM DỪNG (F6)", bg="#fca311")
+            btn_pause.configure(text="TẠM DỪNG (F6)", fg_color="#4F545C", hover_color="#686D73", text_color="#FFFFFF")
             lbl_status.config(text="Tiếp tục quăng cần! Cày tiền thôi!", fg="green")
+
 
 def stop_bot():
     global bot_running, bot_paused
     bot_running = False
     bot_paused = False
     clear_keys()
-    
-    btn_start.config(state=tk.NORMAL)
-    btn_pause.config(state=tk.DISABLED, text="TẠM DỪNG (F6)", bg="#e0e0e0")
-    btn_stop.config(state=tk.DISABLED)
-    combo_slot.config(state="readonly")
+
+    btn_start.configure(state="normal", fg_color="#5865F2")
+    btn_pause.configure(state="disabled", text="TẠM DỪNG (F6)", fg_color="#383A40")
+    btn_stop.configure(state="disabled")
+    combo_slot.configure(state="readonly")
     lbl_status.config(text="Đã tắt Bot hoàn toàn.", fg="red")
 
-keyboard.add_hotkey('f6', toggle_pause)
 
-root = tk.Tk()
-root.title("Cc anh Phúc lập trình ziên")
-root.geometry("320x220")
-root.attributes('-topmost', True)
+keyboard.add_hotkey("f6", toggle_pause)
 
-tk.Label(root, text="CHỌN Ô CẦN CÂU (1-5):", font=("Arial", 10, "bold")).pack(pady=10)
+# Khởi tạo App với UI xịn
+root = ctk.CTk()
+root.title("CC anh Phúc lập trình ziên")
+root.iconbitmap(resource_path("logo.ico"))
+root.geometry("360x250")
+root.attributes("-topmost", True)
+root.configure(fg_color="#18181B") # Nền xám đen nhám
 
-combo_slot = ttk.Combobox(root, values=["1", "2", "3", "4", "5"], state="readonly", width=10)
-combo_slot.current(0)
-combo_slot.pack()
+# Tiêu đề
+lbl_title = ctk.CTkLabel(root, text="CHỌN Ô CẦN CÂU (1-5):", font=("Segoe UI", 13, "bold"), text_color="#E4E4E7")
+lbl_title.pack(pady=(20, 10))
 
-frame_btn = tk.Frame(root)
-frame_btn.pack(pady=15)
+# Dropdown bo góc
+combo_slot = ctk.CTkComboBox(root, values=["1", "2", "3", "4", "5"], width=130, height=32,
+                             fg_color="#2B2D31", border_color="#383A40", 
+                             button_color="#383A40", button_hover_color="#4F545C",
+                             dropdown_fg_color="#2B2D31", dropdown_text_color="#E4E4E7",
+                             text_color="#E4E4E7", font=("Segoe UI", 14, "bold"), state="readonly")
+combo_slot.set("1")
+combo_slot.pack(pady=(0, 20))
 
-btn_start = tk.Button(frame_btn, text="BẬT BOT", bg="#a4de02", font=("Arial", 9, "bold"), width=8, command=start_bot)
-btn_start.grid(row=0, column=0, padx=4)
+# Khung chứa nút
+frame_btn = ctk.CTkFrame(root, fg_color="transparent")
+frame_btn.pack(pady=5)
 
-btn_pause = tk.Button(frame_btn, text="TẠM DỪNG (F6)", bg="#e0e0e0", font=("Arial", 9, "bold"), width=14, command=toggle_pause, state=tk.DISABLED)
-btn_pause.grid(row=0, column=1, padx=4)
+# 3 Nút bấm phẳng, không viền, màu xịn
+btn_start = ctk.CTkButton(frame_btn, text="BẬT BOT", width=80, height=35, corner_radius=6,
+                          fg_color="#5865F2", hover_color="#4752C4", # Xanh Blurple Discord
+                          font=("Segoe UI", 12, "bold"), command=start_bot)
+btn_start.grid(row=0, column=0, padx=8)
 
-btn_stop = tk.Button(frame_btn, text="TẮT", bg="#ff4040", fg="white", font=("Arial", 9, "bold"), width=6, command=stop_bot, state=tk.DISABLED)
-btn_stop.grid(row=0, column=2, padx=4)
+btn_pause = ctk.CTkButton(frame_btn, text="TẠM DỪNG (F6)", width=110, height=35, corner_radius=6,
+                          fg_color="#383A40", hover_color="#4F545C", 
+                          font=("Segoe UI", 12, "bold"), command=toggle_pause, state="disabled")
+btn_pause.grid(row=0, column=1, padx=8)
 
-lbl_status = tk.Label(root, text="Bắt đầu treo thoiiii", fg="black", font=("Arial", 9, "italic"))
-lbl_status.pack()
+btn_stop = ctk.CTkButton(frame_btn, text="TẮT", width=60, height=35, corner_radius=6,
+                         fg_color="#ED4245", hover_color="#C9383A", # Đỏ
+                         font=("Segoe UI", 12, "bold"), command=stop_bot, state="disabled")
+btn_stop.grid(row=0, column=2, padx=8)
 
-root.mainloop() 
+# Trả lại câu Slogan huyền thoại
+_status_widget = ctk.CTkLabel(root, text="Bắt đầu treo thoiiii", font=("Segoe UI", 13, "italic"), text_color="#A1A1AA")
+_status_widget.pack(pady=(15, 0))
+lbl_status = StatusLabelAdapter(_status_widget)
+
+root.mainloop()
