@@ -1,0 +1,12 @@
+# 🚫 Bỏ qua mấy thư mục rác do thằng PyInstaller đẻ ra
+build/
+dist/
+*.spec
+
+# 🚫 Bỏ qua mấy file App đã đóng gói (App thành phẩm)
+*.exe
+*.zip
+
+# 🚫 Bỏ qua bộ nhớ đệm của Python
+__pycache__/
+*.pyc
