@@ -104,10 +104,13 @@ def control_fish(diff, current_pressed):
 
 def finish_fight_and_recast():
     clear_keys()
-    lbl_status.config(text="Câu xong! Chờ game cất cá...", fg="orange")
+    # Báo trạng thái lúc vừa sập UI
+    lbl_status.config(text="Câu xong🎉🎉🎉! Đang cất cá vô túi...", fg="orange") 
+    
     return wait_seconds(
         RECOVERY_DELAY_SEC,
-        lambda remaining: f"Câu xong! Chờ câu tiếp cá... còn {remaining}s",
+        # Đếm ngược mượt mà, từ ngữ tự nhiên, báo rõ Bot chuẩn bị làm gì
+        lambda remaining: f"Câu xong🎉🎉🎉! Tự động quăng lại sau {remaining}s...", 
     )
 
 def fight_minigame(sct):
@@ -283,7 +286,7 @@ root.attributes("-topmost", True)
 root.configure(fg_color="#18181B") # Nền xám đen nhám
 
 # Tiêu đề
-lbl_title = ctk.CTkLabel(root, text="CHỌN Ô CẦN CÂU (1-5):", font=("Segoe UI", 13, "bold"), text_color="#E4E4E7")
+lbl_title = ctk.CTkLabel(root, text="CHỌN Ô CẦN CÂU (1-5)", font=("Segoe UI", 13, "bold"), text_color="#E4E4E7")
 lbl_title.pack(pady=(20, 10))
 
 # Dropdown bo góc
@@ -300,17 +303,17 @@ frame_btn = ctk.CTkFrame(root, fg_color="transparent")
 frame_btn.pack(pady=5)
 
 # 3 Nút bấm phẳng, không viền, màu xịn
-btn_start = ctk.CTkButton(frame_btn, text="BẬT BOT", width=80, height=35, corner_radius=6,
+btn_start = ctk.CTkButton(frame_btn, text="▶ BẬT BOT", width=80, height=35, corner_radius=6,
                           fg_color="#5865F2", hover_color="#4752C4", # Xanh Blurple Discord
                           font=("Segoe UI", 12, "bold"), command=start_bot)
 btn_start.grid(row=0, column=0, padx=8)
 
-btn_pause = ctk.CTkButton(frame_btn, text="TẠM DỪNG (F6)", width=110, height=35, corner_radius=6,
+btn_pause = ctk.CTkButton(frame_btn, text="⏸TẠM DỪNG (F6)", width=110, height=35, corner_radius=6,
                           fg_color="#383A40", hover_color="#4F545C", 
                           font=("Segoe UI", 12, "bold"), command=toggle_pause, state="disabled")
 btn_pause.grid(row=0, column=1, padx=8)
 
-btn_stop = ctk.CTkButton(frame_btn, text="TẮT", width=60, height=35, corner_radius=6,
+btn_stop = ctk.CTkButton(frame_btn, text="❌TẮT", width=60, height=35, corner_radius=6,
                          fg_color="#ED4245", hover_color="#C9383A", # Đỏ
                          font=("Segoe UI", 12, "bold"), command=stop_bot, state="disabled")
 btn_stop.grid(row=0, column=2, padx=8)
