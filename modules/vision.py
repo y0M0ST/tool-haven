@@ -37,6 +37,19 @@ def load_templates():
         else:
             print(f"[Cảnh báo] Khum tìm thấy file mẫu: {path}")
 
+    alt_tpl_files = [
+        "tpl_coral_s1.png",
+        "tpl_coral_s2.png",
+        "tpl_crab_s1.png",
+        "tpl_crab_s2.png",
+    ]
+    for filename in alt_tpl_files:
+        path = resource_path(os.path.join("assets", filename))
+        if os.path.exists(path):
+            TEMPLATES[filename] = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        else:
+            print(f"[Cảnh báo] Khum tìm thấy file mẫu: {path}")
+
 
 def identify_key_pair(sct):
     """ Mắt thần phụ (Bản Xuất Xưởng VIP PRO): Im lặng, nhanh như chớp, chính xác 99.9% """
@@ -50,6 +63,8 @@ def identify_key_pair(sct):
         max_val = 0
 
         for keys, tpl in TEMPLATES.items():
+            if not isinstance(keys, tuple):
+                continue
             if tpl is None: continue
             res = cv2.matchTemplate(gray, tpl, cv2.TM_CCOEFF_NORMED)
             _, val, _, _ = cv2.minMaxLoc(res)
@@ -62,13 +77,31 @@ def identify_key_pair(sct):
             # Hiện lên UI cực sang
             show_l = "←" if best_match[0] == "left" else best_match[0].upper()
             show_r = "→" if best_match[1] == "right" else best_match[1].upper()
-            state.lbl_status.configure(text=f"🔥 Chốt cặp: [ {show_l} ] - [ {show_r} ]", text_color="#00B4D8")
+            state.lbl_status.configure(text=f"Chốt cặp: [ {show_l} ] - [ {show_r} ]", text_color="#00B4D8")
             return best_match # Rút êm!
 
         time.sleep(0.02)
 
-    state.lbl_status.configure(text="⚠️ Khum soi ra đề, gồng đỡ Q-E!", text_color="#ED4245")
+    state.lbl_status.configure(text="Khum soi ra đề, gồng đỡ Q-E!", text_color="#ED4245")
     return ("q", "e")
+
+
+def find_alt_target_center(sct, template_name):
+    tpl = TEMPLATES.get(template_name)
+    if tpl is None:
+        return None
+
+    scr = np.array(sct.grab(config.CENTER_ROI))
+    gray = cv2.cvtColor(scr, cv2.COLOR_BGRA2GRAY)
+    res = cv2.matchTemplate(gray, tpl, cv2.TM_CCOEFF_NORMED)
+    _, val, _, max_loc = cv2.minMaxLoc(res)
+
+    if val > 0.65:
+        h, w = tpl.shape[:2]
+        x = config.CENTER_ROI["left"] + max_loc[0] + w // 2
+        y = config.CENTER_ROI["top"] + max_loc[1] + h // 2
+        return (x, y)
+    return None
 
 
 def scan_fish_bar(sct):

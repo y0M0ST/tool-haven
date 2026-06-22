@@ -24,3 +24,35 @@ FIGHT_DEADZONE = 15
 ROD_KEY_HOLD_SEC = 0.3
 FIGHT_LOOP_SLEEP = 0.02
 SCAN_IDLE_SLEEP = 0.05
+
+TOOL_TIERS = {
+    "Dụng cụ Thường": 15,
+    "Dụng cụ Cấp 2": 10,
+}
+
+# Hộp quét 400x400 nằm ngay chính giữa màn hình Full HD (1920x1080)
+CENTER_ROI = {"top": 340, "left": 760, "width": 400, "height": 400}
+
+JOB_REGISTRY = {
+    "fishing": {
+        "name": "Câu Cá",
+        "type": "fishing",
+        "slot_based": True
+    },
+    "coral": {
+        "name": "Lặn San Hô",
+        "type": "alt_target",
+        "step_1_tpl": "tpl_coral_s1.png",
+        "step_2_tpl": "tpl_coral_s2.png",
+        "work_duration": 15,
+        "menu_pos": (1000, 535)
+    },
+    "crab": {
+        "name": "Bắt Cua",
+        "type": "alt_target",
+        "step_1_tpl": "tpl_crab_s1.png",
+        "step_2_tpl": "tpl_crab_s2.png",
+        "work_duration": 15,
+        "menu_pos": (1000, 535)
+    }
+}
