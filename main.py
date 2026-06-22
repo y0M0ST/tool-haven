@@ -168,7 +168,7 @@ keyboard.add_hotkey("f6", toggle_pause)
 # 🏗️ DỰNG HÌNH KHUNG GIAO DIỆN (WIDGETS)
 # ==========================================
 root = ctk.CTk()
-root.title("TẬP ĐOÀN HAVEN AIO v5.0")
+root.title("CC anh Phúc lập trình diên v5.0")
 root.iconbitmap(resource_path(os.path.join("assets", "logo.ico")))
 
 root.geometry("420x400") 
