@@ -76,9 +76,13 @@ def update_ui_visibility():
 
     # 2. Bày binh bố trận lại theo đúng Logic
     if job_id == "fishing":
-        # Nghề cá: Chỉ hiện Cần câu
+        # Nghề cá: Hiện Cần câu và Cấp Cần câu
+        lbl_tool.configure(text="CHỌN CẤP CẦN CÂU")
         frame_slot.grid(row=0, column=0, sticky="nsew", pady=10)
         dynamic_container.rowconfigure(0, weight=1)
+        
+        frame_tool.grid(row=1, column=0, sticky="nsew", pady=10)
+        dynamic_container.rowconfigure(1, weight=1)
     else:
         # Nghề Cao Su (San hô / Cua)
         current_row = 0
@@ -91,6 +95,7 @@ def update_ui_visibility():
         # 🧠 THẦN CHÚ V5.0: Chỉ hiện ô Đạo Cụ khi tên nghề có chữ "Cua" và đang ở Pha 1!
         is_crab = "cua" in job_name.lower() or "crab" in job_name.lower()
         if is_crab and phase_id == "step_1":
+            lbl_tool.configure(text="CHỌN CẤP ĐẠO CỤ")
             frame_tool.grid(row=current_row, column=0, sticky="nsew", pady=10)
             dynamic_container.rowconfigure(current_row, weight=1)
 

@@ -235,7 +235,11 @@ def execute_alt_step(sct, template_name, step_title, menu_click_pos=None):
 def _run_fishing_cycle(sct):
     state.lbl_status.config(text=f"Quăng cần ô số {state.rod_slot}!", fg="blue")
     press_rod_slot()
-    if not wait_seconds(config.WAIT_AFTER_CAST_SEC, lambda r: f"Đang chờ cá cắn câu, còn {r}s"):
+    
+    # Lấy thời gian chờ dựa vào cấp cần câu (Đạo cụ)
+    wait_sec = config.TOOL_TIERS.get(state.active_tool_tier, config.WAIT_AFTER_CAST_SEC)
+    
+    if not wait_seconds(wait_sec, lambda r: f"Đang chờ cá cắn câu, còn {r}s"):
         return False
     state.lbl_status.config(text="ĐANG BẮT ĐẦU CÂU CÁ...", fg="green")
     if not fight_minigame(sct): return False
